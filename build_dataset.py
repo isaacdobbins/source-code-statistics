@@ -2,15 +2,13 @@ import json
 import os
 import requests
 import shutil 
+import sys
 import time
 import uuid
 
-token = "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"
+token = ""
 
-headers = {
-    "Accept": "application/vnd.github+json",
-    "Authorization": "Bearer {}".format(token),
-}
+headers = {}
 
 out_dir = ""
 
@@ -25,6 +23,10 @@ def get_github_public_repos(pages):
     url = "https://api.github.com/repositories?since={}"
 
     r = requests.get(url.format(0), headers=headers)
+    
+    if r.status_code != 200:
+        return
+
     clone_repos(r.json())
 
     total = 1;
@@ -32,12 +34,21 @@ def get_github_public_repos(pages):
     while 'url' in r.links['next'] and total < pages:
             
         r = requests.get(r.links['next']['url'], headers=headers)
+
         clone_repos(r.json())
 
         total += 1 
 
 if __name__ == "__main__":
     
+    token = sys.argv[1]
+
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "Authorization": "Bearer {}".format(token),
+        "X-GitHub-Api-Version": "2022-11-28",
+    }
+
     out_dir = os.path.join(os.getcwd(), 'repos')
     
     if os.path.exists(out_dir):
@@ -49,4 +60,4 @@ if __name__ == "__main__":
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
 
-    get_github_public_repos(pages = 2)
+    get_github_public_repos(pages = 1)
